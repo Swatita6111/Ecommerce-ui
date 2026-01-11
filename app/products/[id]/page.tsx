@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Product } from "@/types/product";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function ProductDetailsPage() {
   const params = useParams();
@@ -12,6 +13,7 @@ export default function ProductDetailsPage() {
   const [error, setError] = useState("");
 
   const { id } = params;
+  const { dark } = useTheme();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -32,7 +34,11 @@ export default function ProductDetailsPage() {
   // Simple neutral loading skeleton
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div
+        className={`max-w-6xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-12 ${
+          dark ? "bg-dark text-white" : "bg-light text-gray-900"
+        }`}
+      >
         <div className="h-[450px] bg-gray-200 rounded-lg animate-pulse shadow"></div>
         <div className="space-y-6">
           <div className="h-6 bg-gray-300 rounded w-32 animate-pulse"></div>
@@ -50,15 +56,27 @@ export default function ProductDetailsPage() {
   }
 
   if (error)
-    return <p className="text-center py-10 text-red-500 font-semibold">{error}</p>;
+    return (
+      <p className={`text-center py-10 font-semibold ${dark ? "text-red-400" : "text-red-500"}`}>
+        {error}
+      </p>
+    );
   if (!product)
-    return <p className="text-center py-10 font-semibold">Product not found</p>;
+    return (
+      <p className={`text-center py-10 font-semibold ${dark ? "text-gray-300" : "text-gray-900"}`}>
+        Product not found
+      </p>
+    );
 
   return (
-    <div className="max-w-6xl mx-auto py-16 px-4">
+    <div className={`max-w-6xl mx-auto py-16 px-4 ${dark ? "bg-dark text-white" : "bg-light text-gray-900"}`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
         {/* Product Image */}
-        <div className="relative group bg-slate-100 p-6 rounded-xl shadow-lg hover:shadow-2xl transition">
+        <div
+          className={`relative group p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
+            dark ? "bg-gray-800" : "bg-slate-100"
+          }`}
+        >
           <img
             src={product.image}
             alt={product.title}
@@ -74,19 +92,25 @@ export default function ProductDetailsPage() {
           </p>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
+          <h1 className={`${dark ? "text-white" : "text-gray-900"} text-3xl font-bold`}>
+            {product.title}
+          </h1>
 
           {/* Price */}
           <p className="text-2xl font-bold text-pink-500">${product.price}</p>
 
           {/* Description */}
-          <p className="text-gray-700 leading-relaxed">{product.description}</p>
+          <p className={`${dark ? "text-gray-300" : "text-gray-700"} leading-relaxed`}>
+            {product.description}
+          </p>
 
           {/* Action Buttons */}
           <div className="flex gap-4 mt-6">
             <button
               onClick={() => router.back()}
-              className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition shadow"
+              className={`px-5 py-2 rounded-lg shadow transition ${
+                dark ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
             >
               Back to Products
             </button>

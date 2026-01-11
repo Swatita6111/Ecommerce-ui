@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import { Heart } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
 
 type ProductsPageProps = {
   products: Product[];
@@ -12,6 +13,7 @@ type ProductsPageProps = {
   showFavorites: boolean;
   setShowFavorites: (val: boolean) => void;
   loading: boolean;
+  dark: boolean;
 };
 
 export default function ProductsPage({
@@ -21,8 +23,12 @@ export default function ProductsPage({
   showFavorites,
   setShowFavorites,
   loading,
+  dark,
 }: ProductsPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sort, setSort] = useState<"none" | "low" | "high">("none");
+  const ITEMS_PER_PAGE = 6;
+  const [page, setPage] = useState(1);
 
   const toggleFavorite = (id: number) => {
     setFavorites((prev) =>
@@ -32,8 +38,21 @@ export default function ProductsPage({
     );
   };
 
-  const filteredProducts = products.filter((p) =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = [...products]
+    .filter((p) =>
+      p.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sort === "low") return a.price - b.price;
+      if (sort === "high") return b.price - a.price;
+      return 0;
+    });
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const paginatedProducts = filteredProducts.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
   );
 
   const showEmptyFavorites = showFavorites && favorites.length === 0;
@@ -41,24 +60,46 @@ export default function ProductsPage({
     !loading && filteredProducts.length === 0 && searchTerm;
 
   return (
-    <div className="p-6">
+    <div className="p-6 font-sans">
       {/* Search + Toggle */}
       <div className="flex justify-between items-center mb-6">
-        <button
-          onClick={() => setShowFavorites(!showFavorites)}
-          className="px-4 py-3 rounded-md text-sm font-semibold bg-accent text-white
-          hover:opacity-90 transition active:scale-[0.97]"
-        >
-          {showFavorites ? "Back to Products" : "Show Favorites"}
-        </button>
+        {/* Left side: Favorites button */}
+        <div>
+          <button
+            onClick={() => setShowFavorites(!showFavorites)}
+            className="px-4 py-3 rounded-md text-sm font-semibold bg-accent text-white
+                 hover:opacity-90 transition active:scale-[0.97]"
+          >
+            {showFavorites ? "Back to Products" : "Show Favorites"}
+          </button>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-64 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary"
-        />
+        {/* Right side: Sort + Search */}
+        <div className="flex items-center gap-3">
+          {/* Sort Dropdown */}
+          <select
+            aria-label="Sort products by price"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as any)}
+            className="h-10 px-3 rounded-md text-sm border border-gray-300 dark:border-gray-600 
+               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value="none">Sort</option>
+            <option value="low">Price: Low → High</option>
+            <option value="high">Price: High → Low</option>
+          </select>
+
+          {/* Search Input */}
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-10 w-64 px-3 rounded-md border border-gray-300 dark:border-gray-600 
+               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+        </div>
+
       </div>
 
       {/* 🔹 Skeleton Loader (same style as ProductDetailsPage) */}
@@ -105,13 +146,17 @@ export default function ProductsPage({
       {/* Products Grid */}
       {!loading && filteredProducts.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => {
+          {paginatedProducts.map((product) => {
             const isFav = favorites.includes(product.id);
 
             return (
               <div
                 key={product.id}
-                className="relative border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                className={`relative border rounded-lg p-4 transition
+    ${dark
+                    ? "bg-gray-800 text-gray-200 border-gray-700 shadow-sm hover:shadow-md"
+                    : "bg-white text-gray-900 border-gray-300 shadow-sm hover:shadow-md"
+                  }`}
               >
                 <button
                   onClick={() => toggleFavorite(product.id)}
@@ -119,8 +164,9 @@ export default function ProductsPage({
                 >
                   <Heart
                     size={20}
-                    className={
-                      isFav ? "fill-black text-black" : "text-gray-400"
+                    className={isFav
+                      ? `${dark ? "fill-yellow-400 text-yellow-400" : "fill-black text-black"}`
+                      : `${dark ? "text-gray-400" : "text-gray-400"}`
                     }
                   />
                 </button>
@@ -149,6 +195,31 @@ export default function ProductsPage({
           })}
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-3 mt-10">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <span className="px-4 py-2 font-medium">
+            {page} / {totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/components/ThemeProvider"; 
 
 const slides = [
   {
@@ -27,6 +28,7 @@ const slides = [
 export default function HeroSlider() {
   const [active, setActive] = useState(0);
   const router = useRouter();
+  const { dark } = useTheme(); // get dark mode state
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,14 +64,17 @@ export default function HeroSlider() {
               `}
             >
               <p className="text-lg mb-2 text-white">{slide.title}</p>
-              <h1 className="text-5xl font-bold mb-6 text-white">
-                {slide.heading}
-              </h1>
+              <h1 className="text-5xl font-bold mb-6 text-white">{slide.heading}</h1>
+
+              {/* Explore Button */}
               <button
-                className="bg-white text-black px-6 py-3 rounded-full hover:bg-gray-200 transition flex items-center gap-2"
+                className={`px-6 py-3 rounded-full flex items-center gap-2 transition-all duration-200
+                  ${dark
+                    ? "bg-black text-white hover:bg-gray-700 border border-gray-600"
+                    : "bg-white text-black hover:bg-gray-200 border border-gray-300"
+                  }`}
               >
                 Explore Now
-                {/* Simple down arrow SVG */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
