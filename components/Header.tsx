@@ -22,6 +22,8 @@ export default function Header() {
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleTheme}
+          aria-label="Toggle dark mode"
+          aria-pressed={dark}
           className="mt-2 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-md font-medium shadow-md 
                      border transition-all duration-200
                      bg-white dark:bg-gray-800
